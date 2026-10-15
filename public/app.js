@@ -18,3 +18,133 @@ $('copy').onclick=async()=>{if(!$('reply').value.trim())return;try{await navigat
 $('reply').oninput=()=>{$('copy').disabled=!$('reply').value.trim();};
 $('clear').onclick=()=>{$('message').value='';$('reply').value='';$('message').dispatchEvent(new Event('input'));$('copy').disabled=true;$('risk').textContent=tr[lang].approval;$('risk').classList.remove('danger');status('');};
 translate();request('session').then(j=>show(j.authenticated)).catch(()=>show(false));
+
+// =====================================================
+// SMARTREPLY AI - REPHRASE MY OWN REPLY
+// =====================================================
+
+let originalReplyBeforeRephrase = '';
+
+const rephraseButton = document.getElementById('rephrase');
+const undoRephraseButton =
+  document.getElementById('undoRephrase');
+
+function translateRephraseButtons() {
+  if (lang === 'ar') {
+    rephraseButton.textContent = '✨ إعادة صياغة ردي';
+    undoRephraseButton.textContent = '↶ استعادة النص الأصلي';
+  } else {
+    rephraseButton.textContent = '✨ Rephrase my reply';
+    undoRephraseButton.textContent = '↶ Restore original';
+  }
+}
+
+translateRephraseButtons();
+
+document.getElementById('lang').addEventListener(
+  'click',
+  translateRephraseButtons
+);
+
+rephraseButton.addEventListener('click', async () => {
+
+  const replyBox = document.getElementById('reply');
+  const currentText = replyBox.value.trim();
+
+  if (!currentText) {
+    status(
+      lang === 'ar'
+        ? 'اكتب ردك أولاً في مربع الرد.'
+        : 'Please write your reply first.',
+      true
+    );
+    replyBox.focus();
+    return;
+  }
+
+  const sourceText = replyBox.value;
+
+  rephraseButton.disabled = true;
+
+  status(
+    lang === 'ar'
+      ? 'جارٍ تحسين صياغة ردك...'
+      : 'Rephrasing your message...'
+  );
+
+  try {
+
+    const result = await request('rephrase', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        text: currentText,
+        tone: document.getElementById('tone').value
+      })
+    });
+
+    if (!result.reply || !result.reply.trim()) {
+      throw new Error('Empty AI response.');
+    }
+
+    // Preserve the original for the Undo button.
+    originalReplyBeforeRephrase = sourceText;
+
+    replyBox.value = result.reply.trim();
+    replyBox.dir = result.language === 'ar'
+      ? 'rtl'
+      : 'ltr';
+
+    document.getElementById('copy').disabled = false;
+    undoRephraseButton.disabled = false;
+
+    status(
+      lang === 'ar'
+        ? 'تمت إعادة الصياغة. راجع النص قبل نسخه.'
+        : 'Reply rephrased. Please review before copying.'
+    );
+
+  } catch (error) {
+
+    // Keep the user's original response on failure.
+    status(error.message, true);
+
+  } finally {
+    rephraseButton.disabled = false;
+  }
+
+});
+
+undoRephraseButton.addEventListener('click', () => {
+
+  if (!originalReplyBeforeRephrase) return;
+
+  const replyBox = document.getElementById('reply');
+
+  replyBox.value = originalReplyBeforeRephrase;
+  replyBox.dir = 'auto';
+
+  originalReplyBeforeRephrase = '';
+  undoRephraseButton.disabled = true;
+
+  document.getElementById('copy').disabled =
+    !replyBox.value.trim();
+
+  status(
+    lang === 'ar'
+      ? 'تمت استعادة النص الأصلي.'
+      : 'Original reply restored.'
+  );
+});
+
+// Reset Undo whenever the user clears both messages.
+document.getElementById('clear').addEventListener(
+  'click',
+  () => {
+    originalReplyBeforeRephrase = '';
+    undoRephraseButton.disabled = true;
+  }
+);
+
