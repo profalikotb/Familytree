@@ -223,7 +223,7 @@ El Mahkama Square,
 Heliopolis, Cairo, Egypt.
 
 Booking:
-https://calendly.com/alikotb/neurosurgery
+https://dralikotb.vercel.app/
 
 TUKH CLINIC:
 31 Ahmed Abdel Aziz Street,
@@ -231,7 +231,7 @@ After Tukh Central Hospital,
 Tukh, Qalyubia, Egypt.
 
 Booking:
-https://calendly.com/alikotb/tukh_neurosurgery
+https://dralikotb.vercel.app/
 
 Only give clinic information when relevant.
 
