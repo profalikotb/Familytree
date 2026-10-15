@@ -4,7 +4,28 @@
 <section id="loginScreen" class="panel login"><div class="symbol">✦</div><h1 data-i18n="welcome">Welcome back</h1><p class="muted" data-i18n="intro">Sign in to prepare private bilingual reply drafts.</p><form id="loginForm"><label for="password" data-i18n="password">App password</label><input id="password" type="password" autocomplete="current-password" required minlength="8"/><button class="primary" type="submit" data-i18n="signIn">Sign in securely</button></form><p id="loginStatus" class="status" aria-live="polite"></p></section>
 <section id="mainScreen" class="hidden"><div class="hero"><div><span class="eyebrow" data-i18n="private">PRIVATE · APPROVAL REQUIRED</span><h1 data-i18n="compose">Create a smart reply</h1><p data-i18n="helper">Paste a WhatsApp message. You decide what is sent.</p></div><span class="heroicon">✉</span></div>
 <div class="cols"><section class="panel"><div class="sectionhead"><h2 data-i18n="incoming">Incoming message</h2><span class="step">01</span></div><label for="context" data-i18n="messageType">Conversation type</label><select id="context"><option value="clinic" data-i18n="clinic">Clinic / professional</option><option value="personal" data-i18n="personal">Personal</option></select><label for="message" data-i18n="paste">Paste WhatsApp message</label><textarea id="message" rows="8" maxlength="4000" dir="auto" placeholder="اكتب أو الصق رسالة واتساب هنا / Paste message here"></textarea><div class="flexbetween"><span class="hint" id="count">0 / 4000</span><button id="pasteButton" class="textbutton" type="button" data-i18n="pasteClipboard">Paste from clipboard</button></div><label for="tone" data-i18n="tone">Reply tone</label><select id="tone"><option value="professional" data-i18n="formal">Professional</option><option value="friendly" data-i18n="friendly">Warm and friendly</option><option value="brief" data-i18n="concise">Very concise</option></select><button id="generate" class="primary" type="button" data-i18n="generate">✦ Generate draft reply</button></section>
-<section class="panel"><div class="sectionhead"><h2 data-i18n="draft">AI draft · editable</h2><span class="step">02</span></div><div id="risk" class="notice" data-i18n="approval">Approval required: nothing will be sent automatically.</div><label for="reply" data-i18n="edit">Edit before copying</label><textarea id="reply" rows="12" dir="auto" placeholder="Your suggested reply will appear here..."></textarea><p id="status" class="status" aria-live="polite"></p><button id="copy" class="primary" type="button" disabled data-i18n="copy">Copy approved reply</button><button id="clear" class="secondary" type="button" data-i18n="clear">Clear both messages</button><p class="footnote" data-i18n="manual">Return to the original WhatsApp chat and paste the reply yourself. No automatic sending.</p></section></div>
+<section class="panel"><div class="sectionhead"><h2 data-i18n="draft">AI draft · editable</h2><span class="step">02</span></div><div id="risk" class="notice" data-i18n="approval">Approval required: nothing will be sent automatically.</div><label for="reply" data-i18n="edit">Edit before copying</label><textarea id="reply" rows="12" dir="auto" placeholder="Your suggested reply will appear here..."></textarea>
+<div style="display:flex;gap:10px;flex-wrap:wrap;margin:12px 0;">
+  <button
+    id="rephrase"
+    class="primary"
+    type="button"
+    style="flex:2;min-width:160px;background:#165f75;"
+  >
+    ✨ إعادة صياغة ردي
+  </button>
+
+  <button
+    id="undoRephrase"
+    class="secondary"
+    type="button"
+    disabled
+    style="flex:1;min-width:120px;"
+  >
+    ↶ استعادة النص الأصلي
+  </button>
+</div>
+<p id="status" class="status" aria-live="polite"></p><button id="copy" class="primary" type="button" disabled data-i18n="copy">Copy approved reply</button><button id="clear" class="secondary" type="button" data-i18n="clear">Clear both messages</button><p class="footnote" data-i18n="manual">Return to the original WhatsApp chat and paste the reply yourself. No automatic sending.</p></section></div>
 <div class="privacy"><span>🔒</span><p data-i18n="privacy">Do not paste identifying patient information, medical records or sensitive clinical details into the AI service without an appropriate authorized data-processing arrangement. Messages are not saved in this app.</p></div></section>
 <footer>SmartReply AI · iPhone PWA · Manual approval only</footer>
 </main><script src="/app.js" defer></script></body></html>
