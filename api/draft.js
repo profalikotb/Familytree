@@ -15,7 +15,44 @@ export default async function handler(req,res){
   const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),24000);
   let response;
   try{response=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Authorization':`Bearer ${process.env.OPENAI_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({model:process.env.OPENAI_MODEL||'gpt-4.1-mini',temperature:0.3,response_format:{type:'json_object'},messages:[{role:'system',content:system},{role:'user',content:input}]}),signal:controller.signal});}finally{clearTimeout(timeout)}
-  const data=await response.json().catch(()=>({}));if(!response.ok) return json(res,502,{error:'AI service error. Check model, billing, and API key.'});
+  const data = await response.json().catch(() => ({}));
+
+if (!response.ok) {
+  const code = String(data.error?.code || "");
+  const type = String(data.error?.type || "");
+
+  console.error("OpenAI API failure", {
+    status: response.status,
+    code,
+    type
+  });
+
+  let message = "OpenAI service error.";
+
+  if (response.status === 401) {
+    message = "Invalid OpenAI API key. Check Vercel settings.";
+  } else if (
+    code === "insufficient_quota" ||
+    type === "insufficient_quota"
+  ) {
+    message = "OpenAI API quota exhausted. Check billing.";
+  } else if (response.status === 429) {
+    message = "OpenAI rate limit reached. Try again shortly.";
+  } else if (
+    code === "model_not_found" ||
+    code === "invalid_model"
+  ) {
+    message = "Selected AI model is unavailable.";
+  } else if (response.status === 403) {
+    message = "OpenAI access denied. Check project permissions.";
+  } else if (response.status === 400) {
+    message = "OpenAI rejected the request. Check model settings.";
+  }
+
+  return json(res, 502, {
+    error: message
+  });
+}
   const raw=data.choices?.[0]?.message?.content||'';const parsed=parseReply(raw);
   if(!parsed.reply)return json(res,502,{error:'AI returned an empty draft'});
   // Optional n8n activity hook: metadata only, NO message text, NO reply text and NO patient identifiers.
