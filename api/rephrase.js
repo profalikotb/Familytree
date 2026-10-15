@@ -14,7 +14,21 @@ const TONES = {
   brief: 'Very concise: the shortest faithful version. Remove filler only, never content.'
 };
 
-const INSTRUCTION = tone => `
+// Decide output language from the INPUT (letter count), not the UI language.
+function detectLanguage(s) {
+  const ar = (s.match(/[؀-ۿ]/g) || []).length;
+  const en = (s.match(/[A-Za-z]/g) || []).length;
+  return ar > en ? 'ar' : 'en';
+}
+
+const LANGUAGE_RULE = {
+  en: 'OUTPUT LANGUAGE: ENGLISH ONLY. The input is English, so the output must be entirely in English. Do NOT translate into Arabic or add any Arabic words.',
+  ar: 'OUTPUT LANGUAGE: ARABIC ONLY. The input is Arabic, so the output must be entirely in Arabic. Do NOT translate into English. Keep any English technical terms, names or links exactly as written.'
+};
+
+const INSTRUCTION = (tone, language) => `
+${LANGUAGE_RULE[language]}
+
 You are a bilingual (Arabic / English) text-rephrasing tool for Prof. Ali Kotb, a physician and university professor.
 The text below was written by him and he has already approved its content.
 
@@ -26,7 +40,7 @@ ${TONES[tone]}
 
 RULES
 - Keep the exact meaning, every fact, name, number, date, link and commitment. Add nothing. Remove nothing.
-- Keep the same language as the original (Arabic stays Arabic, English stays English, mixed stays mixed).
+- Never translate. Write in the same language as the original message.
 - Correct spelling, grammar and punctuation.
 - Keep greetings or sign-offs only if they exist in the original; do not add new ones.
 - Do not turn uncertainty into certainty or vice versa.
@@ -37,6 +51,8 @@ RULES
 OUTPUT
 Only the final rephrased message, ready to paste into WhatsApp.
 No explanation, no quotes, no Markdown, no headings.
+
+${LANGUAGE_RULE[language]}
 `;
 
 export default async function handler(req, res) {
@@ -59,6 +75,8 @@ export default async function handler(req, res) {
   if (!Object.hasOwn(TONES, tone)) {
     return json(res, 400, { error: 'Invalid tone.' });
   }
+
+  const language = detectLanguage(text);
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -95,10 +113,14 @@ export default async function handler(req, res) {
         'x-goog-api-key': apiKey
       },
       body: JSON.stringify({
-        systemInstruction: { parts: [{ text: INSTRUCTION(tone) }] },
+        systemInstruction: { parts: [{ text: INSTRUCTION(tone, language) }] },
         contents: [{
           role: 'user',
-          parts: [{ text: `Rephrase this message:\n\n${text}` }]
+          parts: [{
+            text: language === 'en'
+              ? `Rephrase this English message in English:\n\n${text}`
+              : `أعد صياغة هذه الرسالة العربية باللغة العربية:\n\n${text}`
+          }]
         }],
         // Medical wording must not be filtered out by Gemini's own safety layer.
         safetySettings: [
@@ -149,7 +171,7 @@ export default async function handler(req, res) {
 
     return json(res, 200, {
       reply: result,
-      language: /[؀-ۿ]/.test(result) ? 'ar' : 'en',
+      language: detectLanguage(result),
       truncated: candidate?.finishReason === 'MAX_TOKENS',
       reviewRequired: true
     });
