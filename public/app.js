@@ -1,150 +1,43 @@
 const $=id=>document.getElementById(id);
-const tr={en:{subtitle:'Private WhatsApp reply assistant',logout:'Logout',welcome:'Welcome back',intro:'Sign in to prepare private bilingual reply drafts.',password:'App password',signIn:'Sign in securely',private:'PRIVATE · APPROVAL REQUIRED',compose:'Create a smart reply',helper:'Paste a WhatsApp message. You decide what is sent.',incoming:'Incoming message',messageType:'Conversation type',clinic:'Clinic / professional',personal:'Personal',paste:'Paste WhatsApp message',pasteClipboard:'Paste from clipboard',tone:'Reply tone',formal:'Professional',friendly:'Warm and friendly',concise:'Very concise',generate:'✦ Generate draft reply',draft:'AI draft · editable',approval:'Approval required: nothing will be sent automatically.',edit:'Edit before copying',copy:'Copy approved reply',clear:'Clear both messages',manual:'Return to the original WhatsApp chat and paste the reply yourself. No automatic sending.',privacy:'Do not paste identifying patient information, medical records or sensitive clinical details into the AI service without an appropriate authorized data-processing arrangement. Messages are not saved in this app.'},ar:{subtitle:'مساعد خاص للرد على واتساب',logout:'خروج',welcome:'مرحباً بعودتك',intro:'ادخل كلمة المرور لإعداد ردود عربية وإنجليزية.',password:'كلمة مرور التطبيق',signIn:'دخول آمن',private:'خاص · يتطلب موافقتك',compose:'إعداد رد ذكي',helper:'الصق رسالة واتساب وراجع الرد قبل إرساله بنفسك.',incoming:'الرسالة الواردة',messageType:'نوع المحادثة',clinic:'العيادة / العمل',personal:'شخصية',paste:'الصق رسالة واتساب',pasteClipboard:'لصق من الحافظة',tone:'أسلوب الرد',formal:'رسمي ومحترف',friendly:'ودود',concise:'مختصر جداً',generate:'✦ إنشاء الرد المقترح',draft:'رد الذكاء الاصطناعي · قابل للتعديل',approval:'الموافقة مطلوبة: لن تُرسل أي رسالة تلقائياً.',edit:'راجع وعدّل قبل النسخ',copy:'نسخ الرد بعد المراجعة',clear:'مسح الرسالتين',manual:'ارجع إلى محادثة واتساب الأصلية وألصق الرد بنفسك. لا يوجد إرسال تلقائي.',privacy:'لا تلصق أسماء المرضى أو ملفاتهم الطبية أو بيانات سرية في خدمة الذكاء الاصطناعي دون ترتيبات قانونية وأمنية ملائمة. التطبيق لا يحفظ الرسائل.'}};
-let lang=localStorage.getItem('sr_lang')||'ar';let logged=false;
-function translate(){document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';$('lang').textContent=lang==='ar'?'English':'عربي';document.querySelectorAll('[data-i18n]').forEach(el=>el.textContent=tr[lang][el.dataset.i18n]);}
+const tr={en:{subtitle:'Private WhatsApp reply assistant',logout:'Logout',welcome:'Welcome back',intro:'Sign in to prepare private bilingual reply drafts.',password:'App password',signIn:'Sign in securely',private:'PRIVATE · APPROVAL REQUIRED',compose:'Create a smart reply',helper:'Paste a WhatsApp message. You decide what is sent.',incoming:'Incoming message',messageType:'Conversation type',clinic:'Clinic / professional',personal:'Personal',paste:'Paste WhatsApp message',pasteClipboard:'Paste from clipboard',tone:'Reply tone',formal:'Professional',friendly:'Warm and friendly',concise:'Very concise',generate:'✦ Generate draft reply',draft:'AI draft · editable',approval:'Approval required: nothing will be sent automatically.',edit:'Edit before copying',rephrase:'✨ Rephrase my reply',undoRephrase:'↶ Restore original',copy:'Copy approved reply',clear:'Clear both messages',manual:'Return to the original WhatsApp chat and paste the reply yourself. No automatic sending.',privacy:'Do not paste identifying patient information, medical records or sensitive clinical details into the AI service without an appropriate authorized data-processing arrangement. Messages are not saved in this app.'},ar:{subtitle:'مساعد خاص للرد على واتساب',logout:'خروج',welcome:'مرحباً بعودتك',intro:'ادخل كلمة المرور لإعداد ردود عربية وإنجليزية.',password:'كلمة مرور التطبيق',signIn:'دخول آمن',private:'خاص · يتطلب موافقتك',compose:'إعداد رد ذكي',helper:'الصق رسالة واتساب وراجع الرد قبل إرساله بنفسك.',incoming:'الرسالة الواردة',messageType:'نوع المحادثة',clinic:'العيادة / العمل',personal:'شخصية',paste:'الصق رسالة واتساب',pasteClipboard:'لصق من الحافظة',tone:'أسلوب الرد',formal:'رسمي ومحترف',friendly:'ودود',concise:'مختصر جداً',generate:'✦ إنشاء الرد المقترح',draft:'رد الذكاء الاصطناعي · قابل للتعديل',approval:'الموافقة مطلوبة: لن تُرسل أي رسالة تلقائياً.',edit:'راجع وعدّل قبل النسخ',rephrase:'✨ إعادة صياغة ردي',undoRephrase:'↶ استعادة النص الأصلي',copy:'نسخ الرد بعد المراجعة',clear:'مسح الرسالتين',manual:'ارجع إلى محادثة واتساب الأصلية وألصق الرد بنفسك. لا يوجد إرسال تلقائي.',privacy:'لا تلصق أسماء المرضى أو ملفاتهم الطبية أو بيانات سرية في خدمة الذكاء الاصطناعي دون ترتيبات قانونية وأمنية ملائمة. التطبيق لا يحفظ الرسائل.'}};
+let lang=localStorage.getItem('sr_lang')||'ar';let logged=false;let originalReplyBeforeRephrase='';
+function translate(){document.documentElement.lang=lang;document.documentElement.dir=lang==='ar'?'rtl':'ltr';$('lang').textContent=lang==='ar'?'English':'عربي';document.querySelectorAll('[data-i18n]').forEach(el=>{const v=tr[lang][el.dataset.i18n];if(v!==undefined)el.textContent=v;});if(!$('risk').classList.contains('danger'))$('risk').textContent=tr[lang].approval;}
 function status(text='',error=false,id='status'){const el=$(id);el.textContent=text;el.classList.toggle('error',error);}
+function resetRisk(){$('risk').classList.remove('danger');$('risk').textContent=tr[lang].approval;}
+function resetUndo(){originalReplyBeforeRephrase='';$('undoRephrase').disabled=true;}
 function show(yes){logged=yes;$('loginScreen').classList.toggle('hidden',yes);$('mainScreen').classList.toggle('hidden',!yes);$('logout').classList.toggle('hidden',!yes);}
 async function request(path,options={}){const response=await fetch('/api/'+path,{credentials:'same-origin',...options});let data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Request failed');return data;}
+const post=(path,body)=>request(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+
 $('lang').onclick=()=>{lang=lang==='ar'?'en':'ar';localStorage.setItem('sr_lang',lang);translate();};
-$('loginForm').onsubmit=async e=>{e.preventDefault();status('',false,'loginStatus');try{await request('login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password:$('password').value})});$('password').value='';show(true);}catch(err){status(err.message,true,'loginStatus');}};
-$('logout').onclick=async()=>{await request('logout',{method:'POST'}).catch(()=>{});$('message').value='';$('reply').value='';show(false);};
+$('loginForm').onsubmit=async e=>{e.preventDefault();status('',false,'loginStatus');try{await post('login',{password:$('password').value});$('password').value='';show(true);}catch(err){status(err.message,true,'loginStatus');}};
+$('logout').onclick=async()=>{await request('logout',{method:'POST'}).catch(()=>{});$('message').value='';$('reply').value='';resetUndo();resetRisk();show(false);};
 $('message').oninput=()=>{$('count').textContent=$('message').value.length+' / 4000';};
 $('pasteButton').onclick=async()=>{try{$('message').value=await navigator.clipboard.readText();$('message').dispatchEvent(new Event('input'));status('');}catch{status(lang==='ar'?'اضغط مطولاً في مربع الرسالة ثم اختر لصق.':'Long press in the message box and select Paste.',true);}};
+
+/* ---------- Generate draft ---------- */
 $('generate').onclick=async()=>{const message=$('message').value.trim();if(message.length<2){status(lang==='ar'?'أدخل الرسالة أولاً.':'Paste a message first.',true);return;}
- $('generate').disabled=true;$('copy').disabled=true;status(lang==='ar'?'جارٍ إعداد الرد...':'Preparing draft…');$('reply').value='';$('risk').classList.remove('danger');
- try{const out=await request('draft',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message,tone:$('tone').value,context:$('context').value})});$('reply').value=out.reply;$('reply').dir=out.language==='ar'?'rtl':'ltr';$('risk').classList.toggle('danger',out.risk==='medical_review');$('risk').textContent=out.risk==='medical_review'?(lang==='ar'?'تنبيه طبي: يتطلب مراجعتك الشخصية؛ لا ترسل نصائح أو تشخيصات تلقائياً.':'Medical caution: clinician review required. Do not send diagnostic or treatment advice automatically.'):tr[lang].approval;status(lang==='ar'?'الرد جاهز للمراجعة والتعديل.':'Draft ready for your review and editing.');$('copy').disabled=false;
+ $('generate').disabled=true;$('copy').disabled=true;status(lang==='ar'?'جارٍ إعداد الرد...':'Preparing draft…');$('reply').value='';resetRisk();resetUndo();
+ try{const out=await post('draft',{message,tone:$('tone').value,context:$('context').value});$('reply').value=out.reply;$('reply').dir=out.language==='ar'?'rtl':'ltr';
+  if(out.risk==='medical_review'){$('risk').classList.add('danger');$('risk').textContent=lang==='ar'?'تنبيه طبي: يتطلب مراجعتك الشخصية؛ لا ترسل نصائح أو تشخيصات تلقائياً.':'Medical caution: clinician review required. Do not send diagnostic or treatment advice automatically.';}
+  status(lang==='ar'?'الرد جاهز للمراجعة والتعديل.':'Draft ready for your review and editing.');$('copy').disabled=false;
  }catch(err){status(err.message,true);}finally{$('generate').disabled=false;}};
-$('copy').onclick=async()=>{if(!$('reply').value.trim())return;try{await navigator.clipboard.writeText($('reply').value);status(lang==='ar'?'تم النسخ. الصق الرد في واتساب بنفسك.':'Copied. Paste into WhatsApp yourself.');}catch{ $('reply').focus();$('reply').select();status(lang==='ar'?'حدد النص وانسخه يدوياً.':'Select and copy the text manually.',true);}};
+
+/* ---------- Rephrase my own reply (no medical gate: author-approved text) ---------- */
+$('rephrase').onclick=async()=>{const replyBox=$('reply');const sourceText=replyBox.value;const text=sourceText.trim();
+ if(!text){status(lang==='ar'?'اكتب ردك أولاً في مربع الرد.':'Please write your reply first.',true);replyBox.focus();return;}
+ $('rephrase').disabled=true;status(lang==='ar'?'جارٍ تحسين صياغة ردك...':'Rephrasing your message…');
+ try{const out=await post('rephrase',{mode:'rephrase',text,tone:$('tone').value,context:$('context').value});
+  const reply=(out.reply||'').trim();if(!reply)throw new Error(lang==='ar'?'لم يصل رد من الخدمة.':'Empty AI response.');
+  originalReplyBeforeRephrase=sourceText;replyBox.value=reply;replyBox.dir=out.language==='ar'?'rtl':out.language==='en'?'ltr':'auto';
+  resetRisk();$('copy').disabled=false;$('undoRephrase').disabled=false;
+  status(lang==='ar'?'تمت إعادة الصياغة. راجع النص قبل نسخه.':'Reply rephrased. Please review before copying.');
+ }catch(err){status(err.message,true);}finally{$('rephrase').disabled=false;}};
+
+$('undoRephrase').onclick=()=>{if(!originalReplyBeforeRephrase)return;const replyBox=$('reply');replyBox.value=originalReplyBeforeRephrase;replyBox.dir='auto';resetUndo();$('copy').disabled=!replyBox.value.trim();status(lang==='ar'?'تمت استعادة النص الأصلي.':'Original reply restored.');};
+
+$('copy').onclick=async()=>{if(!$('reply').value.trim())return;try{await navigator.clipboard.writeText($('reply').value);status(lang==='ar'?'تم النسخ. الصق الرد في واتساب بنفسك.':'Copied. Paste into WhatsApp yourself.');}catch{$('reply').focus();$('reply').select();status(lang==='ar'?'حدد النص وانسخه يدوياً.':'Select and copy the text manually.',true);}};
 $('reply').oninput=()=>{$('copy').disabled=!$('reply').value.trim();};
-$('clear').onclick=()=>{$('message').value='';$('reply').value='';$('message').dispatchEvent(new Event('input'));$('copy').disabled=true;$('risk').textContent=tr[lang].approval;$('risk').classList.remove('danger');status('');};
+$('clear').onclick=()=>{$('message').value='';$('reply').value='';$('message').dispatchEvent(new Event('input'));$('copy').disabled=true;resetRisk();resetUndo();status('');};
+
 translate();request('session').then(j=>show(j.authenticated)).catch(()=>show(false));
-
-// =====================================================
-// SMARTREPLY AI - REPHRASE MY OWN REPLY
-// =====================================================
-
-let originalReplyBeforeRephrase = '';
-
-const rephraseButton = document.getElementById('rephrase');
-const undoRephraseButton =
-  document.getElementById('undoRephrase');
-
-function translateRephraseButtons() {
-  if (lang === 'ar') {
-    rephraseButton.textContent = '✨ إعادة صياغة ردي';
-    undoRephraseButton.textContent = '↶ استعادة النص الأصلي';
-  } else {
-    rephraseButton.textContent = '✨ Rephrase my reply';
-    undoRephraseButton.textContent = '↶ Restore original';
-  }
-}
-
-translateRephraseButtons();
-
-document.getElementById('lang').addEventListener(
-  'click',
-  translateRephraseButtons
-);
-
-rephraseButton.addEventListener('click', async () => {
-
-  const replyBox = document.getElementById('reply');
-  const currentText = replyBox.value.trim();
-
-  if (!currentText) {
-    status(
-      lang === 'ar'
-        ? 'اكتب ردك أولاً في مربع الرد.'
-        : 'Please write your reply first.',
-      true
-    );
-    replyBox.focus();
-    return;
-  }
-
-  const sourceText = replyBox.value;
-
-  rephraseButton.disabled = true;
-
-  status(
-    lang === 'ar'
-      ? 'جارٍ تحسين صياغة ردك...'
-      : 'Rephrasing your message...'
-  );
-
-  try {
-
-    const result = await request('rephrase', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        text: currentText,
-        tone: document.getElementById('tone').value
-      })
-    });
-
-    if (!result.reply || !result.reply.trim()) {
-      throw new Error('Empty AI response.');
-    }
-
-    // Preserve the original for the Undo button.
-    originalReplyBeforeRephrase = sourceText;
-
-    replyBox.value = result.reply.trim();
-    replyBox.dir = result.language === 'ar'
-      ? 'rtl'
-      : 'ltr';
-
-    document.getElementById('copy').disabled = false;
-    undoRephraseButton.disabled = false;
-
-    status(
-      lang === 'ar'
-        ? 'تمت إعادة الصياغة. راجع النص قبل نسخه.'
-        : 'Reply rephrased. Please review before copying.'
-    );
-
-  } catch (error) {
-
-    // Keep the user's original response on failure.
-    status(error.message, true);
-
-  } finally {
-    rephraseButton.disabled = false;
-  }
-
-});
-
-undoRephraseButton.addEventListener('click', () => {
-
-  if (!originalReplyBeforeRephrase) return;
-
-  const replyBox = document.getElementById('reply');
-
-  replyBox.value = originalReplyBeforeRephrase;
-  replyBox.dir = 'auto';
-
-  originalReplyBeforeRephrase = '';
-  undoRephraseButton.disabled = true;
-
-  document.getElementById('copy').disabled =
-    !replyBox.value.trim();
-
-  status(
-    lang === 'ar'
-      ? 'تمت استعادة النص الأصلي.'
-      : 'Original reply restored.'
-  );
-});
-
-// Reset Undo whenever the user clears both messages.
-document.getElementById('clear').addEventListener(
-  'click',
-  () => {
-    originalReplyBeforeRephrase = '';
-    undoRephraseButton.disabled = true;
-  }
-);
-
