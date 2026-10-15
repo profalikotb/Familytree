@@ -1,0 +1,10 @@
+{
+  "name": "SmartReply AI - Nonclinical Activity Counter",
+  "nodes": [
+    {"parameters":{"httpMethod":"POST","path":"smartreply-activity","responseMode":"onReceived","options":{}},"id":"3e312c77-68cd-4414-ad0d-c374421596a1","name":"Activity Webhook","type":"n8n-nodes-base.webhook","typeVersion":2,"position":[240,300],"webhookId":"smartreply-activity"},
+    {"parameters":{"jsCode":"// Audit metadata only. WARNING: configure Header Auth on Webhook before activation.\nconst data = $input.first().json.body ?? {};\nreturn [{json:{event:'draft_created',language: data.language === 'en' ? 'en' : 'ar',medical: Boolean(data.medical),timestamp:new Date().toISOString()}}];"},"id":"855daae6-5bd1-44c9-a858-a2ece6d296ab","name":"Minimal Metadata","type":"n8n-nodes-base.code","typeVersion":2,"position":[480,300]} 
+  ],
+  "connections":{"Activity Webhook":{"main":[[{"node":"Minimal Metadata","type":"main","index":0}]]}},
+  "active":false,
+  "settings":{"executionOrder":"v1"}
+}
