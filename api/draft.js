@@ -217,7 +217,7 @@ Prof. Dr. Ali Kotb Ali
 Professor of Neurosurgery
 Ain Shams University
 
-HELIOPOLIS CLINIC:
+El Mahkama CLINIC:
 34A El Hegaz Street,
 El Mahkama Square,
 Heliopolis, Cairo, Egypt.
