@@ -4,6 +4,7 @@ import {
   authenticated,
   validOrigin
 } from '../lib/security.js';
+   import { CLINIC_FACTS } from '../lib/clinics.js';
 
 // =====================================================
 // SMARTREPLY AI - GOOGLE GEMINI VERSION
