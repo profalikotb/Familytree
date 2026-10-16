@@ -130,6 +130,9 @@ const SR_ABBR_BUILTIN = {
   DSW: 'did surgery with Dr',
   DLPS: 'did LP with Dr Symon Halim',
   LPS: 'lumbar puncture by Dr Symon Halim'
+  Callmag:'ممكن التواصل على هذا الرقم: 01222547661'
+  Callram:'ممكن الاتصال بالأستاذ رامى فى وادى النيل على هذا الرقم: 01001703613'
+ 
 };
 (()=>{const box=$('reply');if(!box)return;
  const dict=()=>Object.assign({},SR_ABBR_BUILTIN,window.SR_ABBR||{});
