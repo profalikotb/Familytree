@@ -41,3 +41,32 @@ $('reply').oninput=()=>{$('copy').disabled=!$('reply').value.trim();};
 $('clear').onclick=()=>{$('message').value='';$('reply').value='';$('message').dispatchEvent(new Event('input'));$('copy').disabled=true;resetRisk();resetUndo();status('');};
 
 translate();request('session').then(j=>show(j.authenticated)).catch(()=>show(false));
+
+/* ---------- Abbreviation expansion (reply box, live, offline) ----------
+   Type an UPPERCASE abbreviation + space/Enter/punctuation → expanded.
+   Backspace right after → reverts to the abbreviation. List: /abbreviations.js */
+(()=>{const box=$('reply'),ABBR=window.SR_ABBR||{};if(!box||!Object.keys(ABBR).length)return;
+ const TRIGGER=/[\s.,;:!?)\]،؛؟]/;let last=null;
+ const flash=(a,f)=>status(`${a} → ${f}`);
+ const cap=(v,start,f)=>/(^|[.!?؟]\s+|\n\s*)$/.test(v.slice(0,start))||start===0?f.charAt(0).toUpperCase()+f.slice(1):f;
+ function expandBefore(pos,trigLen){ // token ends at pos-trigLen
+  const v=box.value,end=pos-trigLen,m=v.slice(0,end).match(/(^|[^A-Za-z0-9_'’\-\/])([A-Z][A-Z0-9]{1,9})$/);
+  if(!m||!Object.hasOwn(ABBR,m[2]))return false;
+  const start=end-m[2].length,full=cap(v,start,ABBR[m[2]]);
+  box.setRangeText(full,start,end,'end');const caret=start+full.length+trigLen;box.setSelectionRange(caret,caret);
+  last={start,abbr:m[2],full,caret};flash(m[2],full);box.dispatchEvent(new Event('input',{bubbles:true}));return true;}
+ box.addEventListener('beforeinput',e=>{
+  if(e.inputType==='deleteContentBackward'&&last&&box.selectionStart===last.caret&&box.selectionEnd===last.caret){
+   e.preventDefault();const s=last.start,e2=s+last.full.length;box.setRangeText(last.abbr,s,e2,'preserve');
+   const c=last.caret-last.full.length+last.abbr.length;box.setSelectionRange(c,c);status('');last=null;
+   box.dispatchEvent(new Event('input',{bubbles:true}));return;}
+  if(e.isTrusted)last=null;});
+ box.addEventListener('input',e=>{if(!e.isTrusted)return;
+  const t=e.inputType,d=e.data||'';
+  if(t==='insertLineBreak'||t==='insertParagraph')expandBefore(box.selectionStart,1);
+  else if((t==='insertText'||t==='insertReplacementText')&&d&&TRIGGER.test(d.slice(-1)))expandBefore(box.selectionStart,1);});
+ // Expand a trailing abbreviation (no trigger typed) before Rephrase / Copy
+ const tail=()=>{const v=box.value,m=v.match(/(^|[^A-Za-z0-9_'’\-\/])([A-Z][A-Z0-9]{1,9})\s*$/);
+  if(m&&Object.hasOwn(ABBR,m[2])){const s=v.length-m[0].length+m[1].length;box.value=v.slice(0,s)+cap(v,s,ABBR[m[2]])+v.slice(s+m[2].length);}};
+ ['rephrase','copy'].forEach(id=>$(id).addEventListener('click',tail,{capture:true}));
+})();
