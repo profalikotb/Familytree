@@ -132,8 +132,8 @@ const SR_ABBR_BUILTIN = {
   LPS: 'lumbar puncture by Dr Symon Halim',
 
   // Contact snippets (mixed-case keys work in any case: Callmag / CALLMAG / callmag)
-  Callmag: 'ممكن التواصل على هذا الرقم: 01222547661',
-  Callram: 'ممكن الاتصال بالأستاذ رامى فى وادى النيل على هذا الرقم: 01001703613'
+  Callmag: 'أهلاً بحضرتك،\nنظراً لظروف العمليات الجراحية وعدم القدرة على الرد على الرسائل أو المكالمات حالياً، يُرجى التواصل على الرقم التالى:\n📞 01222547661\nمع خالص التحية.',
+  Callram: 'أهلاً بحضرتك،\nنظراً لظروف العمليات الجراحية وعدم القدرة على الرد على الرسائل أو المكالمات حالياً، يُرجى التواصل مع الأستاذ رامى بمستشفى وادى النيل على الرقم التالى:\n📞 01001703613\nمع خالص التحية.'
 };
 (()=>{const box=$('reply');if(!box)return;
  const dict=()=>Object.assign({},SR_ABBR_BUILTIN,window.SR_ABBR||{});
