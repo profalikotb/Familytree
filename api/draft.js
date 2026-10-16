@@ -172,7 +172,7 @@ export default async function handler(req, res) {
     });
   }
 
-  const model = safeModelName(process.env.GEMINI_MODEL);
+  const model = process.env.GEMINI_MODEL || '';
   const language = detectLanguage(message);
   const medical = detectMedical(message);
 
