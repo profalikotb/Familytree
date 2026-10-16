@@ -93,6 +93,7 @@ const SR_ABBR_BUILTIN = {
   MRIBC: 'MRI brain with contrast',
   MRISEL: 'MRI sella with contrast',
   MRISPECT: 'MRI brain spectroscopy',
+  DS: 'dynamic study',
   MRIDY: 'MRI LSS and dynamic study',
   MRILD: 'for MRI lumbosacral and dynamic study',
   MRILDD: 'MRI LSS, DEXA and dynamic study',
