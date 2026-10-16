@@ -4,6 +4,7 @@ import {
   validOrigin
 } from '../lib/security.js';
 import { CLINIC_FACTS, BOOKING_URL } from '../lib/clinics.js';
+import { gemini } from '../lib/gemini.js';
 
 // =====================================================
 // SMARTREPLY AI - GOOGLE GEMINI VERSION
@@ -241,56 +242,25 @@ ${LANGUAGE_RULE[language]}
   }
 
   // =====================================================
-  // CALL GOOGLE GEMINI API
+  // CALL GOOGLE GEMINI API (retries + fallback model in lib/gemini.js)
   // =====================================================
 
-  const generationConfig = {
+  const out = await gemini({
+    apiKey,
+    model,
+    system: systemPrompt,
+    user: message,
     temperature: 0.3,
     maxOutputTokens: 2048,
-    responseMimeType: 'application/json'
-  };
-  // 2.5 Flash "thinking" eats output tokens and can truncate the JSON.
-  if (/^gemini-2\.5-flash/.test(model)) {
-    generationConfig.thinkingConfig = { thinkingBudget: 0 };
+    json: true
+  });
+
+  if (!out.ok) {
+    return json(res, out.status, { error: out.error });
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 24000);
-
-  try {
-    const endpoint = GEMINI_API + encodeURIComponent(model) + ':generateContent';
-
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey
-      },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ role: 'user', parts: [{ text: message }] }],
-        generationConfig
-      }),
-      signal: controller.signal
-    });
-
-    const data = await response.json().catch(() => ({}));
-
-    if (!response.ok) {
-      return json(res, 502, { error: errorMessage(response.status, data) });
-    }
-
-    const raw = (data.candidates?.[0]?.content?.parts || [])
-      .filter(part => typeof part.text === 'string' && !part.thought)
-      .map(part => part.text)
-      .join('');
-
-    if (!raw.trim()) {
-      return json(res, 502, {
-        error: 'Gemini returned an empty reply or blocked the request.'
-      });
-    }
-
+  {
+    const raw = out.text;
     const parsed = parseGeminiReply(raw, language);
 
     if (!parsed.reply) {
@@ -339,16 +309,5 @@ ${LANGUAGE_RULE[language]}
       risk: 'general_review'
     });
 
-  } catch (error) {
-    console.error('SmartReply Gemini request failed', { name: error.name });
-
-    if (error.name === 'AbortError' || error.name === 'TimeoutError') {
-      return json(res, 504, { error: 'Gemini request timed out. Please try again.' });
-    }
-
-    return json(res, 502, { error: 'Unable to generate Gemini reply. Check Vercel logs.' });
-
-  } finally {
-    clearTimeout(timeout);
   }
 }
