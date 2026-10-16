@@ -129,21 +129,23 @@ const SR_ABBR_BUILTIN = {
   DOH: 'Dr Osama Abd El Hay',
   DSW: 'did surgery with Dr',
   DLPS: 'did LP with Dr Symon Halim',
-  LPS: 'lumbar puncture by Dr Symon Halim'
-  Callmag:'ممكن التواصل على هذا الرقم: 01222547661'
-  Callram:'ممكن الاتصال بالأستاذ رامى فى وادى النيل على هذا الرقم: 01001703613'
- 
+  LPS: 'lumbar puncture by Dr Symon Halim',
+
+  // Contact snippets (mixed-case keys work in any case: Callmag / CALLMAG / callmag)
+  Callmag: 'ممكن التواصل على هذا الرقم: 01222547661',
+  Callram: 'ممكن الاتصال بالأستاذ رامى فى وادى النيل على هذا الرقم: 01001703613'
 };
 (()=>{const box=$('reply');if(!box)return;
  const dict=()=>Object.assign({},SR_ABBR_BUILTIN,window.SR_ABBR||{});
+ const find=(A,tok)=>{if(Object.hasOwn(A,tok))return tok;const k=Object.keys(A).find(k=>k!==k.toUpperCase()&&k.toLowerCase()===tok.toLowerCase());return k||null;};
  const kh=document.querySelector('.kbdhint');if(kh)kh.insertAdjacentHTML('beforeend',` · ${Object.keys(dict()).length} abbreviations`);
  const TRIGGER=/[\s.,;:!?)\]،؛؟]/;let last=null;
  const flash=(a,f)=>status(`${a} → ${f}`);
  const cap=(v,start,f)=>/(^|[.!?؟]\s+|\n\s*)$/.test(v.slice(0,start))||start===0?f.charAt(0).toUpperCase()+f.slice(1):f;
  function expandBefore(pos,trigLen){ // token ends at pos-trigLen
-  const v=box.value,end=pos-trigLen,m=v.slice(0,end).match(/(^|[^A-Za-z0-9_'’\-\/])([A-Z][A-Z0-9]{1,9})$/);
-  const ABBR=dict();if(!m||!Object.hasOwn(ABBR,m[2]))return false;
-  const start=end-m[2].length,full=cap(v,start,ABBR[m[2]]);
+  const v=box.value,end=pos-trigLen,m=v.slice(0,end).match(/(^|[^A-Za-z0-9_'’\-\/])([A-Za-z][A-Za-z0-9]{1,11})$/);
+  const ABBR=dict(),key=m&&find(ABBR,m[2]);if(!key)return false;
+  const start=end-m[2].length,full=cap(v,start,ABBR[key]);
   box.setRangeText(full,start,end,'end');const caret=start+full.length+trigLen;box.setSelectionRange(caret,caret);
   last={start,abbr:m[2],full,caret};flash(m[2],full);box.dispatchEvent(new Event('input',{bubbles:true}));return true;}
  box.addEventListener('beforeinput',e=>{
@@ -157,7 +159,7 @@ const SR_ABBR_BUILTIN = {
   if(t==='insertLineBreak'||t==='insertParagraph')expandBefore(box.selectionStart,1);
   else if((t==='insertText'||t==='insertReplacementText')&&d&&TRIGGER.test(d.slice(-1)))expandBefore(box.selectionStart,1);});
  // Expand a trailing abbreviation (no trigger typed) before Rephrase / Copy
- const tail=()=>{const ABBR=dict(),v=box.value,m=v.match(/(^|[^A-Za-z0-9_'’\-\/])([A-Z][A-Z0-9]{1,9})\s*$/);
-  if(m&&Object.hasOwn(ABBR,m[2])){const s=v.length-m[0].length+m[1].length;box.value=v.slice(0,s)+cap(v,s,ABBR[m[2]])+v.slice(s+m[2].length);}};
+ const tail=()=>{const ABBR=dict(),v=box.value,m=v.match(/(^|[^A-Za-z0-9_'’\-\/])([A-Za-z][A-Za-z0-9]{1,11})\s*$/),key=m&&find(ABBR,m[2]);
+  if(key){const s=v.length-m[0].length+m[1].length;box.value=v.slice(0,s)+cap(v,s,ABBR[key])+v.slice(s+m[2].length);}};
  ['rephrase','copy'].forEach(id=>$(id).addEventListener('click',tail,{capture:true}));
 })();
