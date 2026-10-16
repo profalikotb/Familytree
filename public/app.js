@@ -44,14 +44,101 @@ translate();request('session').then(j=>show(j.authenticated)).catch(()=>show(fal
 
 /* ---------- Abbreviation expansion (reply box, live, offline) ----------
    Type an UPPERCASE abbreviation + space/Enter/punctuation → expanded.
-   Backspace right after → reverts to the abbreviation. List: /abbreviations.js */
-(()=>{const box=$('reply'),ABBR=window.SR_ABBR||{};if(!box||!Object.keys(ABBR).length)return;
+   Backspace right after → reverts. Add/edit entries in SR_ABBR_BUILTIN below.
+   (An optional /abbreviations.js defining window.SR_ABBR is merged on top.) */
+const SR_ABBR_BUILTIN = {
+  // Spine — cervical
+  CD: 'cervical disc',
+  CDS: 'cervical discs',
+  CDNOT: 'cervical discs not improved by medical treatment',
+  CX: 'cervical',
+  NECKRT: 'neck pain and right brachialgia',
+  NECKLT: 'neck pain and left brachialgia',
+  NECKBIL: 'neck pain and bilateral brachialgia',
+  INNK: 'neck spasm with intact motor power',
+
+  // Spine — lumbar
+  LD: 'lumbar disc',
+  LDS: 'lumbar discs',
+  LDNOT: 'lumbar discs not improved by medical treatment',
+  LSS: 'lumbosacral',
+  LBPRT: 'LBP and right sciatica',
+  LBPLT: 'LBP and left sciatica',
+  LBPBIL: 'LBP and bilateral sciatica',
+  INBA: 'back spasm with intact motor power',
+  SPOND: 'spondylolisthesis',
+  SACRT: 'right sacroiliitis',
+  SACLT: 'left sacroiliitis',
+  SACBIL: 'bilateral sacroiliitis',
+
+  // Limbs / joints
+  UL: 'upper limb',
+  LL: 'lower limb',
+  RTSH: 'right shoulder',
+  LTSH: 'left shoulder',
+  POLY: 'polyarthropathy',
+  PLM: 'pain limiting movement',
+
+  // Cranial
+  ESS: 'empty sella syndrome',
+  NPH: 'normal pressure hydrocephalus',
+  PAP: 'papilledema',
+  ISC: 'ischemic changes',
+  TSS: 'transverse sinus stenosis',
+  FUNDV: 'for fundus and visual field',
+
+  // Imaging
+  PLX: 'plain X-ray',
+  MRICX: 'MRI cervical spine',
+  MRIBC: 'MRI brain with contrast',
+  MRISEL: 'MRI sella with contrast',
+  MRISPECT: 'MRI brain spectroscopy',
+  MRIDY: 'MRI LSS and dynamic study',
+  MRILD: 'for MRI lumbosacral and dynamic study',
+  MRILDD: 'MRI LSS, DEXA and dynamic study',
+  MRICLD: 'for MRI cervical, lumbosacral and dynamic study',
+
+  // Treatment / course
+  MTPT: 'medical treatment then physiotherapy',
+  NOTIMP: 'not improved by medical treatment',
+  PIM: 'partially improved',
+  MIMP: 'much improved with physiotherapy',
+  MIP: 'much improved with physiotherapy',
+  PPT: 'physiotherapy',
+  PPTN: 'physiotherapy on the neck',
+  PPTB: 'physiotherapy on the back',
+  PPTNB: 'physiotherapy on the neck and back',
+  SPT: 'for self physiotherapy',
+  PAINTH: 'pain therapy',
+  RF: 'radiofrequency',
+  WFS: 'wait for surgery',
+  PTRS: 'the patient refused the surgery',
+  WC: 'wound is clean for follow-up',
+  PT: 'patient',
+  FB: 'fees back',
+
+  // Colleagues
+  DHO: 'Dr Hosam El Obrachy',
+  DMAL: 'Dr Mohamed Alaa',
+  DMF: 'Dr Mohamed Fouad',
+  DMH: 'Dr Mahmoud Hemida',
+  DTM: 'Dr Tarek El Menicie',
+  DWAF: 'Dr Mohamed Wafa',
+  DSYM: 'Dr Symon Halim',
+  DOH: 'Dr Osama Abd El Hay',
+  DSW: 'did surgery with Dr',
+  DLPS: 'did LP with Dr Symon Halim',
+  LPS: 'lumbar puncture by Dr Symon Halim'
+};
+(()=>{const box=$('reply');if(!box)return;
+ const dict=()=>Object.assign({},SR_ABBR_BUILTIN,window.SR_ABBR||{});
+ const kh=document.querySelector('.kbdhint');if(kh)kh.insertAdjacentHTML('beforeend',` · ${Object.keys(dict()).length} abbreviations`);
  const TRIGGER=/[\s.,;:!?)\]،؛؟]/;let last=null;
  const flash=(a,f)=>status(`${a} → ${f}`);
  const cap=(v,start,f)=>/(^|[.!?؟]\s+|\n\s*)$/.test(v.slice(0,start))||start===0?f.charAt(0).toUpperCase()+f.slice(1):f;
  function expandBefore(pos,trigLen){ // token ends at pos-trigLen
   const v=box.value,end=pos-trigLen,m=v.slice(0,end).match(/(^|[^A-Za-z0-9_'’\-\/])([A-Z][A-Z0-9]{1,9})$/);
-  if(!m||!Object.hasOwn(ABBR,m[2]))return false;
+  const ABBR=dict();if(!m||!Object.hasOwn(ABBR,m[2]))return false;
   const start=end-m[2].length,full=cap(v,start,ABBR[m[2]]);
   box.setRangeText(full,start,end,'end');const caret=start+full.length+trigLen;box.setSelectionRange(caret,caret);
   last={start,abbr:m[2],full,caret};flash(m[2],full);box.dispatchEvent(new Event('input',{bubbles:true}));return true;}
@@ -66,7 +153,7 @@ translate();request('session').then(j=>show(j.authenticated)).catch(()=>show(fal
   if(t==='insertLineBreak'||t==='insertParagraph')expandBefore(box.selectionStart,1);
   else if((t==='insertText'||t==='insertReplacementText')&&d&&TRIGGER.test(d.slice(-1)))expandBefore(box.selectionStart,1);});
  // Expand a trailing abbreviation (no trigger typed) before Rephrase / Copy
- const tail=()=>{const v=box.value,m=v.match(/(^|[^A-Za-z0-9_'’\-\/])([A-Z][A-Z0-9]{1,9})\s*$/);
+ const tail=()=>{const ABBR=dict(),v=box.value,m=v.match(/(^|[^A-Za-z0-9_'’\-\/])([A-Z][A-Z0-9]{1,9})\s*$/);
   if(m&&Object.hasOwn(ABBR,m[2])){const s=v.length-m[0].length+m[1].length;box.value=v.slice(0,s)+cap(v,s,ABBR[m[2]])+v.slice(s+m[2].length);}};
  ['rephrase','copy'].forEach(id=>$(id).addEventListener('click',tail,{capture:true}));
 })();
