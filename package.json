@@ -1,8 +1,0 @@
-{
-  "name": "smartreply-ai-iphone",
-  "version": "1.0.0",
-  "private": true,
-  "type": "module",
-  "scripts": {"dev": "vercel dev", "check": "node --check api/login.js && node --check api/draft.js && node --check api/logout.js && node --check public/app.js"},
-  "engines": {"node": ">=20"}
-}
